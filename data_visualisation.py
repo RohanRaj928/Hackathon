@@ -40,7 +40,7 @@ def plot_carbon_emissions(start_date=None, end_date=None):
 
     # Plot the carbon emissions over time
     plt.figure(figsize=(12, 6))
-    sns.lineplot(data=data, x='Date', y='Carbon Emissions (MWh)',
+    sns.lineplot(data=data, x='Timestamp', y='Total_Energy_Consumption_MWh',
                  hue='Site', marker='o')
     plt.xlabel('Date')
     plt.ylabel('Carbon Emissions (MWh)')
