@@ -7,6 +7,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import csv
 import random
 
+def floatToString(inputValue):
+    return ('%.15f' % inputValue).rstrip('0').rstrip('.')
+
 # --- Load CSV Data ---
 def load_csv_data():
     csv_data = {}
@@ -16,7 +19,8 @@ def load_csv_data():
             date = row['Timestamp']
             s1_emissions = round(float(row['Scope_1_Emissions_tonnes_CO2e']))
             s2_emissions = round(float(row['Scope_2_Emissions_tonnes_CO2e']))
-            csv_data[date] = {'s1_emissions': s1_emissions, 's2_emissions': s2_emissions}
+            renewable_percentage = round(float(row['On_Site_Renewable_Energy_Percentage']))
+            csv_data[date] = {'s1_emissions': s1_emissions, 's2_emissions': s2_emissions, 'renewable_percentage': renewable_percentage}
     return csv_data
 
 csv_data = load_csv_data()
@@ -41,11 +45,12 @@ def update_week_info(start_date):
         if date_str in csv_data:
             s1_emissions = csv_data[date_str]['s1_emissions']
             s2_emissions = csv_data[date_str]['s2_emissions']
+            renewable_percentage = csv_data[date_str]['renewable_percentage']
         else:
             s1_emissions = round(random.uniform(100, 200)) if date == datetime.now().date() else '???'
             s2_emissions = round(random.uniform(100, 200)) if date == datetime.now().date() else '???'
-        week_info.append({'day_name': day_name, 'date_str': date_str, 's1_emissions': s1_emissions, 's2_emissions': s2_emissions})
-
+            renewable_percentage = '???'
+        week_info.append({'day_name': day_name, 'date_str': date_str, 's1_emissions': s1_emissions, 's2_emissions': s2_emissions, 'renewable_percentage':renewable_percentage})
     update_day_frames()
 
 # --- Update Day Frames ---
@@ -57,7 +62,7 @@ def update_day_frames():
 
 # --- Calculation Function ---
 def calculate_cost_difference():
-    total_difference = 0
+    total_cost = 0
     result_text = "CO2 Emissions Difference Breakdown:\n\n"
 
     # Loop through each day and compute the cost difference based on the selected option.
@@ -65,17 +70,15 @@ def calculate_cost_difference():
         selection = day_vars[i].get()  # either "s1" or "s2"
         day_name = day_info['day_name']
         date_str = day_info['date_str']
-        if selection == "s1":
-            emissions = day_info['s1_emissions']
-            difference = day_info['s1_emissions'] - day_info['s2_emissions']
-        else:
-            emissions = day_info['s2_emissions']
-            difference = day_info['s2_emissions'] - day_info['s1_emissions']
-        cost = difference * 100000
-        result_text += f"{day_name} ({date_str}): Option {selection.upper()}, Emissions = {emissions} tonnes CO2, Cost = ${cost}, Difference = {difference} tonnes CO2\n\n"
-        total_difference += cost
 
-    result_text += f"\nTotal Extra Cost (if s2 chosen over s1) = ${total_difference}"
+        emissions = day_info['s1_emissions'] + day_info['s2_emissions']
+        renewable_percentage = day_info['renewable_percentage']
+
+        cost = emissions * 16.20
+        result_text += f"{day_name} ({date_str}): Total Emissions = {emissions} tonnes CO2, Cost = £{round(cost)}, Percentage Renewable: = {renewable_percentage}%\n\n"
+        total_cost += cost
+
+    result_text += f"\nTotal = £{total_cost}"
     result_label.config(text=result_text)
 
     # Update the Matplotlib graph
